@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html>
+<meta charset="utf-8">
+<head>
+    <title>Apple pencil touch test</title>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+</head>
+<body>
+    <div style="position: relative;margin-left: 3em;margin-top: 4em;">
+        <p>Potato tomato and so on</p>
+    <canvas class="annotationarea" style="user-select:none;touch-action: none;width: 800px;border: 1px solid red;position: absolute;top: 0;left: 0"></canvas>
+    </div>
+
+
+<script type="text/javascript">
+
+    class Paint {
+
+        constructor(element) {
+            this.$el = element;
+
+            this.$canvas = this.$el.find(".annotationarea").get(0);
+            this.$ctx = this.$canvas.getContext("2d");
+
+            //this.initializeControls();
+            this.initializePaint();
+        }
+
+        initializePaint() {
+            let that = this;
+            this.drawing = false;
+            this.edit_mode = true;
+            this.position = null;
+            this.shape = [];
+            this.rect = this.$canvas.getBoundingClientRect();
+            console.log(this.rect);
+            this.offsetHeight = this.$canvas.offsetHeight;
+            this.offsetWidth = this.$canvas.offsetWidth;
+            this.$canvas.width = 800;
+            this.scaling = 800 / this.offsetWidth;
+            this.$canvas.height = this.offsetHeight / this.offsetWidth * 800;
+            this.$canvas.addEventListener('mousedown', this.onMouseDown.bind(this), false);
+            this.$canvas.addEventListener('mousemove', this.onMouseMove.bind(this), false);
+            this.$canvas.addEventListener('mouseup', this.onMouseUp.bind(this), false);
+            // Add touch support
+            this.$canvas.addEventListener('touchstart', function (ev) {
+                //ev.preventDefault();
+                let touch = ev.changedTouches[0];
+                console.log('Touch start');
+                console.log(ev);
+
+
+                console.log(touch);
+
+                console.log('---');
+                let mouseEvent = new MouseEvent("mousedown", {
+                    clientX: touch.clientX,
+                    clientY: touch.clientY
+                });
+                that.$canvas.dispatchEvent(mouseEvent);
+            }, false);
+            this.$canvas.addEventListener('touchmove', function (ev) {
+                //ev.preventDefault();
+                let touch = ev.changedTouches[0];
+                let mouseEvent = new MouseEvent("mousemove", {
+                    clientX: touch.clientX,
+                    clientY: touch.clientY
+                });
+                that.$canvas.dispatchEvent(mouseEvent);
+            }, false);
+            this.$canvas.addEventListener('touchend', function (ev) {
+                //ev.preventDefault();
+                let touch = ev.changedTouches[0];
+                console.log('Touch end');
+                console.log(ev);
+
+
+                console.log(touch);
+
+                console.log('---');
+                let mouseEvent = new MouseEvent("mouseup", {
+                    clientX: touch.clientX,
+                    clientY: touch.clientY
+                });
+                that.$canvas.dispatchEvent(mouseEvent);
+            }, false);
+
+            this.$ctx.lineWidth = 2.5;
+            this.$ctx.translate(0.5, 0.5);
+            this.$ctx.imageSmoothingEnabled = false;
+            this.$ctx.lineJoin = "round";
+            this.$ctx.lineCap = "round";
+        }
+
+        log(ev) {
+            //console.log(JSON.stringify(object));
+           return;
+        }
+
+        stringifyEvent(e) {
+            const obj = {};
+            for (let k in e) {
+                obj[k] = e[k];
+            }
+            return JSON.stringify(obj, (k, v) => {
+                if (v instanceof Node) return 'Node';
+                if (v instanceof Window) return 'Window';
+                return v;
+            }, ' ')
+        }
+
+        getPosition(ev) {
+            this.rect = this.$canvas.getBoundingClientRect();
+            let pos = [(ev.clientX - this.rect.left)*this.scaling, (ev.clientY-this.rect.top)*this.scaling];
+            console.log(pos);
+            return pos;
+        }
+
+        onMouseDown(ev) {
+            this.log(ev);
+            console.log(ev);
+
+            this.drawing = true;
+            this.position = this.getPosition(ev);
+            this.shape = [this.position];
+            this.$ctx.beginPath();
+            //this.$ctx.strokeStyle = this.$color.value;
+            //this.$ctx.fillStyle = this.$color.value;
+        }
+
+        onMouseMove(ev) {
+            if (!this.drawing) {
+                return;
+            }
+            let new_position = this.getPosition(ev);
+            this.$ctx.moveTo(this.position[0], this.position[1]);
+            this.$ctx.lineTo(new_position[0], new_position[1]);
+            this.$ctx.stroke();
+            this.position = new_position;
+        }
+
+        onMouseUp(ev) {
+            if (!this.drawing) {
+                return;
+            }
+            this.drawing = false;
+            let new_position = this.getPosition(ev);
+            this.$ctx.moveTo(this.position[0], this.position[1]);
+            this.$ctx.lineTo(new_position[0], new_position[1]);
+            this.$ctx.stroke();
+            this.position = null;
+            //this.save();
+        }
+
+
+
+
+    }
+
+    new Paint($('body'));
+</script>
+</body>
+</html>
